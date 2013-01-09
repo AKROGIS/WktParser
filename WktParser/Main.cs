@@ -4,8 +4,8 @@ using System.Linq;
 
 namespace WktParser
 {
-	class MainClass
-	{
+    class MainClass
+    {
         public static void Main(string[] args)
         {
             //string[] testdata = { "Point z (12.3 3 4)", "Point (12.3 3)", "Point m  (2.3 3 4)", "Point zm (12.3 3 4.1 5.5)" };
@@ -27,7 +27,7 @@ namespace WktParser
         private static string ConvertWkt(string s)
         {
             var wkt = new WktText(s);
-            string result="";
+            string result = "";
 
             if (wkt.Type == WktType.GeometryCollection)
             {
@@ -45,16 +45,16 @@ namespace WktParser
             //if (wkt.Type == WktType.Tin)
             //if (wkt.Type == WktType.PolyhedralSurface)
             if (wkt.Type == WktType.MultiPolygon)
-                {
+            {
                 result = string.Format("{0} {1} (", wkt.Type, wkt.ZmText);
                 foreach (var polygon in wkt.Token.Tokens)
-				{
+                {
                     result += "(";
                     foreach (var ring in polygon.Tokens)
-					{
+                    {
                         result += "(";
                         foreach (var point in ring.Tokens)
-						{
+                        {
                             result += FixPoint(point.Coords, wkt.CoordinateCount) + ", ";
                         }
                         result += "), ";
@@ -106,21 +106,21 @@ namespace WktParser
                 }
                 result += ")";
             }
-			
-			if (wkt.Type == WktType.MultiPoint)
-			{
+
+            if (wkt.Type == WktType.MultiPoint)
+            {
                 result = string.Format("{0} {1} (", wkt.Type, wkt.ZmText);
-			    result = wkt.Token.Tokens
+                result = wkt.Token.Tokens
                     .Select(point => FixPoint(point.Coords, wkt.CoordinateCount))
                     .Aggregate(result, (current, coordtext) => current + "(" + coordtext + "), ");
-			    result = result.Substring(0,result.Length-2) + ")";
-			}
-			
-			if (wkt.Type == WktType.Point)
-			{
+                result = result.Substring(0, result.Length - 2) + ")";
+            }
+
+            if (wkt.Type == WktType.Point)
+            {
                 var coordtext = FixPoint(wkt.Token.Coords, wkt.CoordinateCount);
                 result = string.Format("{0} {1} ({2})", wkt.Type, wkt.ZmText, coordtext);
-			}
+            }
 
             return result;
         }
@@ -138,32 +138,32 @@ namespace WktParser
             return coords.Aggregate("", (a, n) => a == "" ? a + n : a + " " + n);
         }
 
-	}
-		         
-	public class WktText
-	{
-		public WktText(string s)
-		{
-			if (string.IsNullOrEmpty(s))
-				throw new ArgumentException("WKT is empty");
-			ParsePrefix(s);
-		}
-		
-		public bool HasZ { get; private set; }
-		public bool HasM { get; private set; }
-		public int CoordinateCount { get; private set; }
-		public WktType Type { get; private set; }
+    }
+
+    public class WktText
+    {
+        public WktText(string s)
+        {
+            if (string.IsNullOrEmpty(s))
+                throw new ArgumentException("WKT is empty");
+            ParsePrefix(s);
+        }
+
+        public bool HasZ { get; private set; }
+        public bool HasM { get; private set; }
+        public int CoordinateCount { get; private set; }
+        public WktType Type { get; private set; }
         public WktToken Token { get; private set; }
 
-		public void ParsePrefix(string s)
-		{
-			int startIndex = s.IndexOf('(');
-		    int endIndex = s.LastIndexOf(')');
-		    string prefix = startIndex == -1 ? s : s.Substring(0,startIndex);
+        public void ParsePrefix(string s)
+        {
+            int startIndex = s.IndexOf('(');
+            int endIndex = s.LastIndexOf(')');
+            string prefix = startIndex == -1 ? s : s.Substring(0, startIndex);
 
-		    HasZ = false;
-		    HasM = false;
-		    CoordinateCount = 2;
+            HasZ = false;
+            HasM = false;
+            CoordinateCount = 2;
             prefix = prefix.Trim().ToLower();
             if (prefix.EndsWith(" z"))
             {
@@ -175,7 +175,7 @@ namespace WktParser
                 HasM = true;
                 CoordinateCount = 3;
             }
-		    if (prefix.EndsWith(" zm"))
+            if (prefix.EndsWith(" zm"))
             {
                 HasM = true;
                 HasZ = true;
@@ -204,28 +204,28 @@ namespace WktParser
             if (prefix.StartsWith("geometrycollection"))
                 Type = WktType.GeometryCollection;
 
-            Token = new WktToken(s,startIndex, endIndex);
+            Token = new WktToken(s, startIndex, endIndex);
         }
 
         public string ZmText
         {
             get { return (HasZ ? "Z" : "") + (HasM ? "M" : ""); }
         }
-	}
-	
-	public class WktToken
-	{
-		public WktToken(string s, int startIndex, int endIndex)
-		{
-		    Text = s;
-		    StartIndex = startIndex;
-		    EndIndex = endIndex;
+    }
+
+    public class WktToken
+    {
+        public WktToken(string s, int startIndex, int endIndex)
+        {
+            Text = s;
+            StartIndex = startIndex;
+            EndIndex = endIndex;
             //remove optional whitespace and/or parens at ends of token
-		    if (IsEmpty)
+            if (IsEmpty)
                 return;
             while (Char.IsWhiteSpace(Text[StartIndex]))
                 StartIndex++;
-		    bool removedLeadingParen = false;
+            bool removedLeadingParen = false;
             if (Text[StartIndex] == '(')
             {
                 StartIndex++;
@@ -241,12 +241,12 @@ namespace WktParser
         public int StartIndex { get; private set; }
         public int EndIndex { get; private set; }
 
-	    public bool IsEmpty
-	    {
-	        get { return StartIndex < 0 || EndIndex < StartIndex; }
-	    }
+        public bool IsEmpty
+        {
+            get { return StartIndex < 0 || EndIndex < StartIndex; }
+        }
 
-	    public IEnumerable<WktToken> Tokens
+        public IEnumerable<WktToken> Tokens
         {
             get
             {
@@ -273,12 +273,12 @@ namespace WktParser
 
                     if (nesting == 0 && Text[currentEnd] == ',')
                     {
-                        yield return new WktToken(Text, currentStart, currentEnd-1);
+                        yield return new WktToken(Text, currentStart, currentEnd - 1);
                         currentStart = currentEnd + 1;
                         while (currentStart < EndIndex && Char.IsWhiteSpace(Text[currentStart]))
                             currentStart++;
                         //currentStart may be a '(', do not let currentEnd go past it without nesting.
-                        currentEnd = currentStart-1;
+                        currentEnd = currentStart - 1;
                     }
                     currentEnd++;
                 }
@@ -286,22 +286,22 @@ namespace WktParser
         }
 
 
-		public IEnumerable<double> Coords
-		{
-			get
-			{
+        public IEnumerable<double> Coords
+        {
+            get
+            {
                 if (IsEmpty)
                     return new double[0];
-			    string text = Text.Substring(StartIndex, 1 + EndIndex - StartIndex);
-			    string[] words = text.Split((Char[])null, StringSplitOptions.RemoveEmptyEntries);
-			    return words.Select(Convert.ToDouble);
-			}
-		}
-	}
-	
-	public enum WktType
-	{
-		None,
+                string text = Text.Substring(StartIndex, 1 + EndIndex - StartIndex);
+                string[] words = text.Split((Char[])null, StringSplitOptions.RemoveEmptyEntries);
+                return words.Select(Convert.ToDouble);
+            }
+        }
+    }
+
+    public enum WktType
+    {
+        None,
         Point,
         LineString,
         Polygon,
@@ -312,5 +312,5 @@ namespace WktParser
         MultiLineString,
         MultiPolygon,
         GeometryCollection,
-	}
+    }
 }
